@@ -1,9 +1,20 @@
 <template>
-  <div id="nav">
-    <h2>Hello</h2>
+  <div id="app">
+    <router-view></router-view>
+    <main-tab-bar></main-tab-bar>
   </div>
-  <router-view/>
 </template>
 
+<script>
+import mainTabBar from "components/context/maintabbar/mainTabBar";
+export default {
+  name: 'App',
+  components: {
+    mainTabBar
+  }
+}
+</script>
+
 <style>
+
 </style>

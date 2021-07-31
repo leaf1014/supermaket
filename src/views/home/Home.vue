@@ -1,14 +1,20 @@
 <template>
   <div id="home">
     <nav-bar class="homeNavBar"><div slot="center">购物街</div></nav-bar>
-    <home-swiper :banner="banner"></home-swiper>
-    <home-recommend :recommend="recommend"></home-recommend>
-    <show-popular></show-popular>
-    <tab-control
-      class="tab-control"
-      :titles="['流行','新款','精选']"
-      @tabClick="tabClick"></tab-control>
-    <goods-list :goods="showGoods"></goods-list>
+    <Scroll class="content"
+            ref="scroll"
+            :probe-type="3"
+            @scroll="contentScroll"
+            :pull-up-load="true"
+            @pullingUp="loadMore">
+      <home-swiper :banner="banner"></home-swiper>
+      <home-recommend :recommend="recommend"></home-recommend>
+      <show-popular></show-popular>
+      <tab-control :titles="['流行','新款','精选']"
+        @tabClick="tabClick" ref="tabControl"></tab-control>
+      <goods-list :goods="showGoods"></goods-list>
+    </Scroll>
+    <back-top @click.native="backClick" v-show="isDisplay"></back-top>
     <ul>
       <li>列表1</li>
       <li>列表2</li>
@@ -119,6 +125,8 @@ import NavBar from "../../components/common/navbar/NavBar";
 import TabControl from "../../components/context/tabControl/TabControl";
 import GoodsList from "../../components/context/goods/GoodsList";
 import GoodsListItem from "../../components/context/goods/GoodsListItem";
+import Scroll from "../../components/common/scroll/Scroll";
+import BackTop from "../../components/context/backTop/BackTop";
 
 import HomeSwiper from "./childComps/HomeSwiper";
 import HomeRecommend from "./childComps/HomeRecommend";
@@ -131,6 +139,7 @@ export default {
   name: "Home",
   data(){
     return{
+      isDisplay:false,
       banner:[],
       recommend:[],
       goods:{
@@ -148,7 +157,9 @@ export default {
     ShowPopular,
     TabControl,
     GoodsList,
-    GoodsListItem
+    GoodsListItem,
+    Scroll,
+    BackTop
   },
   created() {
     this.getHomeMultiData()
@@ -156,6 +167,15 @@ export default {
     this.getHomeGoods('pop')
     this.getHomeGoods('new')
     this.getHomeGoods('sell')
+
+  },
+  mounted() {
+    const refresh = this.debounce(this.$refs.scroll.imgRefresh,200)
+    this.$bus.$on('imgLoad',()=>{
+      refresh()
+    })
+
+    console.log(this.$refs.tabControl.$el.offsetTop)
   },
   computed:{
     showGoods(){
@@ -166,6 +186,15 @@ export default {
     /*
     * 事件监听
     * */
+    debounce(func,delay){
+      let timer = null
+      return function (...args){
+        if(timer) clearTimeout(timer)
+        timer=setTimeout(()=>{
+          func.apply(this,args)
+        },delay)
+      }
+    },
     tabClick(item){
       if(item=='流行'){
         this.currentType='pop'
@@ -175,12 +204,21 @@ export default {
         this.currentType='sell'
       }
     },
+    backClick() {
+      this.$refs.scroll.scrollToTop(0,0)
+    },
+    contentScroll(position){
+      this.isDisplay=position.y<-800
+    },
+    loadMore(){
+      this.getHomeGoods(this.currentType)
+      // this.$refs.scroll.scroll.refresh()
+    },
     /*
     * 网络请求
     * */
     getHomeMultiData(){
       getHomeMultiData().then(res =>{
-        console.log(res)
         this.banner = res.data.data.banner.list
         this.recommend = res.data.data.recommend.list
       })
@@ -191,6 +229,7 @@ export default {
       getHomeGoods(type,page).then(res =>{
         this.goods[type].list.push(...res.data.data.list)
         this.goods[type].page+=1
+        this.$refs.scroll.finishUp()
       })
     }
   }
@@ -200,6 +239,7 @@ export default {
 <style scoped>
 #home{
   padding-top: 44px;
+  height: 100vh;
 }
 
 .homeNavBar{
@@ -212,9 +252,9 @@ export default {
   z-index: 9;
 }
 
-.tab-control{
-  position: sticky;
-  top: 44px;
-  z-index: 9;
+
+.content{
+  height: 100%;
+  overflow: hidden;
 }
 </style>

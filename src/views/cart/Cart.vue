@@ -1,141 +1,56 @@
 <template>
-  <div class="wrapper" ref="aaa">
-    <ul class="content">
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-      <li>列表</li>
-    </ul>
+  <div  id="cart" class="cart" ref="aaa">
+    <nav-bar class="nav-bar">
+      <div slot="center">购物车({{cartLength}})</div>
+    </nav-bar>
+    <scroll :pull-up-load="true" ref="scroll" class="content">
+      <cart-list class="cart-list"></cart-list>
+    </scroll>
+    <cart-bottom-bar></cart-bottom-bar>
   </div>
 </template>
 
 <script>
-import BScroll from 'better-scroll'
+import NavBar from "../../components/common/navbar/NavBar";
+import CartList from "./childComps/CartList";
+import Scroll from "../../components/common/scroll/Scroll";
+import CartBottomBar from "./childComps/CartBottomBar";
+
+import {mapGetters} from "vuex"
 
 export default {
   name: "Cart",
   data(){
-    return {
-      scroll
+    return{
+      msg:5
     }
   },
-  mounted() {
-    this.scroll =
-      new BScroll
-      (document.querySelector('.wrapper'),{
-        probeType: 3,
-        pullUpLoad: true
-      })
-
-    this.scroll.on('scroll',(position)=>{
-      // console.log(position)
-    })
-
-    this.scroll.on('pullingUp',()=>{
-      console.log('上拉加载更多')
-    })
+  components:{
+    NavBar,
+    CartList,
+    Scroll,
+    CartBottomBar
+  },
+  computed:{
+    ...mapGetters(['cartLength'])
+  },
+  activated() {
+    this.$refs.scroll.imgRefresh()
   }
 }
 </script>
 <style scoped>
-.wrapper{
-  height: 150px;
-  background-color: red;
+#cart{
+  height: 100vh;
+}
+
+.nav-bar {
+  background-color: var(--color-tint);
+  color: #fff;
+}
+
+.content{
+  height: calc(100% - 49px - 44px - 40px);
+  overflow: hidden;
 }
 </style>

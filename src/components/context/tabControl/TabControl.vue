@@ -20,7 +20,8 @@ export default {
   methods:{
     itemClick(item,index) {
       this.currentIndex=index;
-      this.$emit('tabClick',item)
+      this.$emit('tabClick',index)
+      console.log(index)
     }
   },
   props:{

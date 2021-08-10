@@ -46,6 +46,7 @@ export default {
   },
   methods:{
     scrollToTop(x,y,time=3000){
+      console.log('返回'+y)
       this.scroll.scrollTo(x,y,time)
     },
     finishUp(){

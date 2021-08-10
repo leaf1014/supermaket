@@ -1,17 +1,20 @@
 <template>
   <div id="home">
     <nav-bar class="homeNavBar"><div slot="center">购物街</div></nav-bar>
+    <tab-control :titles="['流行','新款','精选']"
+                 @tabClick="tabClick" ref="tabControl1"
+                 class="tab-control1" v-show="isTabFixed"></tab-control>
     <Scroll class="content"
             ref="scroll"
             :probe-type="3"
             @scroll="contentScroll"
             :pull-up-load="true"
             @pullingUp="loadMore">
-      <home-swiper :banner="banner"></home-swiper>
+      <home-swiper :banner="banner" @swiperImgLoad="swiperImgLoad"></home-swiper>
       <home-recommend :recommend="recommend"></home-recommend>
       <show-popular></show-popular>
       <tab-control :titles="['流行','新款','精选']"
-        @tabClick="tabClick" ref="tabControl"></tab-control>
+        @tabClick="tabClick" ref="tabControl2" v-show="!isTabFixed"></tab-control>
       <goods-list :goods="showGoods"></goods-list>
     </Scroll>
     <back-top @click.native="backClick" v-show="isDisplay"></back-top>
@@ -127,6 +130,8 @@ import GoodsList from "../../components/context/goods/GoodsList";
 import GoodsListItem from "../../components/context/goods/GoodsListItem";
 import Scroll from "../../components/common/scroll/Scroll";
 import BackTop from "../../components/context/backTop/BackTop";
+import {itemListenerMixin} from "../../common/mixin";
+
 
 import HomeSwiper from "./childComps/HomeSwiper";
 import HomeRecommend from "./childComps/HomeRecommend";
@@ -147,9 +152,15 @@ export default {
         'new':{page:0,list:[]},
         'sell':{page:0,list:[]}
       },
-      currentType:'pop'
+      currentType:'pop',
+      tabOffsetTop:null,
+      isTabFixed:false,
+      saveY:0
     }
   },
+
+  mixins:[itemListenerMixin],
+
   components:{
     NavBar,
     HomeSwiper,
@@ -161,6 +172,7 @@ export default {
     Scroll,
     BackTop
   },
+
   created() {
     this.getHomeMultiData()
 
@@ -169,14 +181,18 @@ export default {
     this.getHomeGoods('sell')
 
   },
-  mounted() {
-    const refresh = this.debounce(this.$refs.scroll.imgRefresh,200)
-    this.$bus.$on('imgLoad',()=>{
-      refresh()
-    })
 
-    console.log(this.$refs.tabControl.$el.offsetTop)
+  activated() {
+    this.$refs.scroll.scrollToTop(0,this.saveY,1)
+    this.$refs.scroll.imgRefresh()
   },
+
+  deactivated() {
+    this.saveY=this.$refs.scroll.scroll.y
+    console.log(this.saveY)
+    this.$bus.$off('imgLoad',this.ListenerImgLoad)
+  },
+
   computed:{
     showGoods(){
       return this.goods[this.currentType].list
@@ -186,33 +202,31 @@ export default {
     /*
     * 事件监听
     * */
-    debounce(func,delay){
-      let timer = null
-      return function (...args){
-        if(timer) clearTimeout(timer)
-        timer=setTimeout(()=>{
-          func.apply(this,args)
-        },delay)
-      }
-    },
-    tabClick(item){
-      if(item=='流行'){
+    tabClick(index){
+      if(index===1){
         this.currentType='pop'
-      }else if(item=='新款'){
+      }else if(index===2){
         this.currentType='new'
       }else{
         this.currentType='sell'
       }
+      this.$refs.tabControl1.currentIndex=index
+      this.$refs.tabControl2.currentIndex=index
     },
     backClick() {
       this.$refs.scroll.scrollToTop(0,0)
+      console.log('rilegou')
     },
     contentScroll(position){
       this.isDisplay=position.y<-800
+      this.isTabFixed=(-position.y)>this.tabOffsetTop
     },
     loadMore(){
       this.getHomeGoods(this.currentType)
-      // this.$refs.scroll.scroll.refresh()
+      this.$refs.scroll.imgRefresh()
+    },
+    swiperImgLoad(){
+      this.tabOffsetTop=this.$refs.tabControl2.$el.offsetTop-40
     },
     /*
     * 网络请求
@@ -238,23 +252,22 @@ export default {
 
 <style scoped>
 #home{
-  padding-top: 44px;
   height: 100vh;
 }
 
 .homeNavBar{
   background-color: var(--color-tint);
   color: #f6f6f6;
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  z-index: 9;
 }
 
 
 .content{
   height: 100%;
   overflow: hidden;
+}
+
+.tab-control1{
+  position: relative;
+  z-index: 9;
 }
 </style>
